@@ -1,3 +1,18 @@
+#!/bin/env python3
+# -*- coding: utf-8 -*-
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#    A copy of the GNU General Public License is available at
+#    http://www.gnu.org/licenses/gpl-3.0.html
+
+"""Perform prediction of gene."""
+
 import argparse
 import sys
 import os
@@ -41,16 +56,16 @@ def get_arguments():
     parser = argparse.ArgumentParser(description=__doc__, usage=
                                      "{0} -h"
                                      .format(sys.argv[0]))
-    parser.add_argument('-i', dest='genome_file', type=isfile, required=True, 
+    parser.add_argument('-i', dest='genome_file', type=isfile, required=True,
                         help="Complete genome file in fasta format")
-    parser.add_argument('-g', dest='min_gene_len', type=int, 
+    parser.add_argument('-g', dest='min_gene_len', type=int,
                         default=50, help="Minimum gene length to consider")
-    parser.add_argument('-s', dest='max_shine_dalgarno_distance', type=int, 
+    parser.add_argument('-s', dest='max_shine_dalgarno_distance', type=int,
                         default=16, help="Maximum distance from start codon "
                         "where to look for a Shine-Dalgarno motif")
     parser.add_argument('-d', dest='min_gap', type=int, default=40,
                         help="Minimum gap between two genes (shine box not included).")
-    parser.add_argument('-p', dest='predicted_genes_file', type=str, 
+    parser.add_argument('-p', dest='predicted_genes_file', type=str,
                         default=os.curdir + os.sep +"predict_genes.csv",
                         help="Tabular file giving position of predicted genes")
     parser.add_argument('-o', dest='fasta_file', type=str,
@@ -103,7 +118,7 @@ def find_start(start_regex, sequence, start, stop):
         Position of the first occurrence of a start codon in the search zone or None
     """
     first_occur =start_regex.search(sequence, start, stop)
-    if first_occur == None:
+    if first_occur is None:
         return first_occur
     return first_occur.start(0)
 
@@ -128,7 +143,7 @@ def find_stop(stop_regex, sequence, start):
     """
     multi_occur = stop_regex.finditer(sequence, start, len(sequence))
     for match in multi_occur:
-        if match != None:
+        if match is not None:
             if (match.start(0) - start )% 3 == 0:
                 return match.start(0)
     return None
@@ -156,12 +171,12 @@ def has_shine_dalgarno(shine_regex, sequence, start, max_shine_dalgarno_distance
         True if a Shine_Dalgarno motif is found or False
     """
     first_occur = shine_regex.search(sequence, start-max_shine_dalgarno_distance, start-6-2)
-    if first_occur == None:
+    if first_occur is None:
         return False
     return True
 
 
-def predict_genes(sequence, start_regex, stop_regex, shine_regex, 
+def predict_genes(sequence, start_regex, stop_regex, shine_regex,
                   min_gene_len, max_shine_dalgarno_distance, min_gap):
     """Predict most probable genes
     Parameters
@@ -196,11 +211,12 @@ def predict_genes(sequence, start_regex, stop_regex, shine_regex,
     current_pos = 0
     while len(sequence) - current_pos >= min_gap:
         current_pos = find_start(start_regex, sequence, current_pos, len(sequence))
-        if current_pos != None:
+        if current_pos is not None:
             stop = find_stop(stop_regex, sequence, current_pos)
-            if stop != None:
+            if stop is not None:
                 if (stop - current_pos) >= min_gene_len:
-                    if has_shine_dalgarno(shine_regex, sequence, current_pos, max_shine_dalgarno_distance):
+                    if has_shine_dalgarno(shine_regex, sequence, current_pos,
+                                          max_shine_dalgarno_distance):
                         list_genes.append([current_pos+1, stop+3])
                         current_pos = (stop+3) + min_gap
                     else:
@@ -234,9 +250,9 @@ def write_genes(fasta_file, sequence, probable_genes, sequence_rc, probable_gene
     """
     try:
         with open(fasta_file, "wt") as fasta:
-            for i,gene_pos in enumerate(probable_genes):
+            for i, gene_pos in enumerate(probable_genes):
                 fasta.write(">gene_{0}{1}{2}{1}".format(
-                    i+1, os.linesep, 
+                    i+1, os.linesep,
                     fill(sequence[gene_pos[0]-1:gene_pos[1]])))
             i = i+1
             for j,gene_pos in enumerate(probable_genes_comp):
@@ -267,27 +283,27 @@ def main():
     start_regex = re.compile('AT[TG]|[ATCG]TG')
     stop_regex = re.compile('TA[GA]|TGA')
     # Shine AGGAGGUAA
-    #AGGA ou GGAGG 
+    #AGGA ou GGAGG
     shine_regex = re.compile('A?G?GAGG|GGAG|GG.{1}GG')
     # Arguments
     args = get_arguments()
     # Let us do magic in 5' to 3'
     sequence = read_fasta(args.genome_file)
     sequence = sequence.replace('U', 'T')
-    list_genes = predict_genes(sequence, start_regex, stop_regex, shine_regex, 
+    list_genes = predict_genes(sequence, start_regex, stop_regex, shine_regex,
                   args.min_gene_len, args.max_shine_dalgarno_distance, args.min_gap)
 
     # We reverse and complement
     sequence_rc = reverse_complement(sequence)
-    list_genes_rc = predict_genes(sequence_rc, start_regex, stop_regex, shine_regex, 
+    list_genes_rc = predict_genes(sequence_rc, start_regex, stop_regex, shine_regex,
                   args.min_gene_len, args.max_shine_dalgarno_distance, args.min_gap)
     for gene in list_genes_rc:
         gene.reverse()
         gene[0] = len(sequence_rc) - gene[0] +1
-        gene[1] = len(sequence_rc) - gene[1] +1 
+        gene[1] = len(sequence_rc) - gene[1] +1
     # Don't forget to uncomment !!!
     # Call these function in the order that you want
-    
+
     # Call to output functions
     write_genes_pos(args.predicted_genes_file, list_genes)
     write_genes(args.fasta_file, sequence, list_genes, sequence, list_genes_rc)
