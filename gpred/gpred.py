@@ -202,7 +202,7 @@ def predict_genes(sequence, start_regex, stop_regex, shine_regex,
                 if (stop - current_pos) >= min_gene_len:
                     if has_shine_dalgarno(shine_regex, sequence, current_pos, max_shine_dalgarno_distance):
                         list_genes.append([current_pos+1, stop+3])
-                        current_pos = (stop+2) + min_gap
+                        current_pos = (stop+3) + min_gap
                     else:
                         current_pos = current_pos + 1
                 else:
@@ -272,15 +272,25 @@ def main():
     # Arguments
     args = get_arguments()
     # Let us do magic in 5' to 3'
-    
+    sequence = read_fasta(args.genome_file)
+    sequence = sequence.replace('U', 'T')
+    list_genes = predict_genes(sequence, start_regex, stop_regex, shine_regex, 
+                  args.min_gene_len, args.max_shine_dalgarno_distance, args.min_gap)
+
+    # We reverse and complement
+    sequence_rc = reverse_complement(sequence)
+    list_genes_rc = predict_genes(sequence_rc, start_regex, stop_regex, shine_regex, 
+                  args.min_gene_len, args.max_shine_dalgarno_distance, args.min_gap)
+    for gene in list_genes_rc:
+        gene.reverse()
+        gene[0] = len(sequence_rc) - gene[0] +1
+        gene[1] = len(sequence_rc) - gene[1] +1 
     # Don't forget to uncomment !!!
     # Call these function in the order that you want
-    # We reverse and complement
-    #sequence_rc = reverse_complement(sequence)
+    
     # Call to output functions
-    #write_genes_pos(args.predicted_genes_file, probable_genes)
-    #write_genes(args.fasta_file, sequence, probable_genes, sequence_rc, probable_genes_comp)
-
+    write_genes_pos(args.predicted_genes_file, list_genes)
+    write_genes(args.fasta_file, sequence, list_genes, sequence, list_genes_rc)
 
 
 if __name__ == '__main__':
