@@ -170,7 +170,9 @@ def has_shine_dalgarno(shine_regex, sequence, start, max_shine_dalgarno_distance
     Boolean
         True if a Shine_Dalgarno motif is found or False
     """
-    first_occur = shine_regex.search(sequence, start-max_shine_dalgarno_distance, start-6-2)
+    if start - max_shine_dalgarno_distance < 0:
+        return False
+    first_occur = shine_regex.search(sequence, start-max_shine_dalgarno_distance, start-6)
     if first_occur is None:
         return False
     return True
