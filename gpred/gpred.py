@@ -80,16 +80,59 @@ def read_fasta(fasta_file):
                 seq+=line.strip().upper()
     return seq
 
+
 def find_start(start_regex, sequence, start, stop):
-    """Find the start codon
     """
-    pass
+    Find the start codon
+    Parameters
+    ----------
+    start_regex:
+    regex object
+        identifier un codon start
+    sequence:
+    String
+        Séquence du génome
+    start :
+    Int
+        position de début de la recherche
+    stop :
+    Int
+        position de fin de la recherche
+    Returns
+    -------
+        Position of the first occurrence of a start codon in the search zone or None
+    """
+    first_occur =start_regex.search(sequence, start, stop)
+    if first_occur == None:
+        return first_occur
+    return first_occur.start(0)
 
 
 def find_stop(stop_regex, sequence, start):
-    """Find the stop codon
     """
-    pass
+    Find the stop codon
+    Parameters
+    ----------
+    stop_regex:
+    regex object
+        identifier un codon start
+    sequence:
+    String
+        Séquence du génome
+    start :
+    Int
+        position de début de la recherche
+    Returns
+    -------
+        Position of the first occurrence of a stop codon in the search zone or None
+    """
+    multi_occur = stop_regex.finditer(sequence, start, len(sequence))
+    for match in multi_occur:
+        if match != None:
+            if (match.start(0) - start )% 3 == 0:
+                return match.start(0)
+    return None
+
 
 def has_shine_dalgarno(shine_regex, sequence, start, max_shine_dalgarno_distance):
     """Find a shine dalgarno motif before the start codon
