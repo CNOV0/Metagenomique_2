@@ -118,7 +118,7 @@ def find_stop(stop_regex, sequence, start):
         identifier un codon start
     sequence:
     String
-        Séquence du génome
+        Sequence du genome
     start :
     Int
         position de début de la recherche
@@ -136,14 +136,81 @@ def find_stop(stop_regex, sequence, start):
 
 def has_shine_dalgarno(shine_regex, sequence, start, max_shine_dalgarno_distance):
     """Find a shine dalgarno motif before the start codon
+    Parameters
+    ----------
+    shine_regex:
+    regex object
+        permettant d’identifier une séquence de Shine-Dalagarno
+    sequence:
+    String
+        Sequence du genome
+    start:
+    Int
+        Position of the start of the search
+    max_shine_dalgarno_distance :
+    Int
+        Relative position of the Shine-Dalgarno distance from the start codon
+    Returns
+    -------
+    Boolean
+        True if a Shine_Dalgarno motif is found or False
     """
-    pass
+    first_occur = shine_regex.search(sequence, start-max_shine_dalgarno_distance, start-6-2)
+    if first_occur == None:
+        return False
+    return True
+
 
 def predict_genes(sequence, start_regex, stop_regex, shine_regex, 
                   min_gene_len, max_shine_dalgarno_distance, min_gap):
     """Predict most probable genes
+    Parameters
+    ----------
+    sequence :
+    String
+        Sequence du genome
+    start_regex:
+    regex object
+        permettant d’identifier un codon start
+    stop_regex:
+    regex object
+        permettant d’identifier un codon stop
+    shine_regex:
+    regex object
+        permettant d’identifier une séquence de Shine-Dalagarno
+    min_gene_len:
+    Int
+        longueur minimale d’un gène (valeur obtenue en argument du programme)
+    max_shine_dalgarno_distance:
+    Int
+        Position relative de la séquence de Shine-Dalgarno par rapport au codon d’initiation (valeur obtenue en argument du programme)
+    min_gap:
+    Int
+        Distance relative minimale entre 2 gènes (valeur obtenue en argument du programme)
+    Returns
+    -------
+    List
+        List des gènes prédits sous la forme d’une list of lists
     """
-    pass
+    current_pos = 0
+    while longueur_sequence - current_pos >= min_gap
+	current_pos = Trouver un codon d'initiation à partir de la position courante
+	Si current_pos non nulle:
+        stop = Trouver un codon stop à partir de la nouvelle current_pos
+        Si stop est non nulle:
+            Déterminer si le gène répond au critère de longueur minimale
+	        Si oui:
+                  Déterminer s'il dispose d'une séquence de Shine-Dalgarno en amont de son codon d'initiation
+                   Si oui:
+                        gène probable identifié
+                        current_pos = position dernière lettre codon stop + min_gap
+		       Sinon:
+				current_pos = current_pos + 1
+            Sinon:
+			current_pos = current_pos + 1
+           Sinon:
+               current_pos = current_pos + 1
+    Retourne la liste des positions des gènes prédits
 
 
 def write_genes_pos(predicted_genes_file, probable_genes):
